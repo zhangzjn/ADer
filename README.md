@@ -23,7 +23,7 @@
 
 - [x] 🚀 Multi-/Single-class Training and Testing
 - [x] 🚀 DDP Training
-- [x] 🚀 Convenient and flexible way to implement a new approach, refer to [here](###How to Add a New Approach).
+- [x] 🚀 Convenient and flexible way to implement a new approach, refer to [here](###How to Build a Custom Approach).
 - [x] 🚀 [ViTAD](https://zhangzjn.github.io/projects/ViTAD)
 - [x] 🚀 [InvAD](https://zhangzjn.github.io/projects/InvAD): download [wide_resnet50_2](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/wide_resnet50_racm-8234f177.pth) in `TIMM` to `model/pretrain`
 - [x] Reproduced popular counterparts: 
@@ -94,10 +94,8 @@ Please refer to [Datasets Description](data/README.md) for preparing visual AD d
 ---
 
 ## 📜 MUAD Results on Popular AD Datasets
-- More reproduced results of representative approaches are in [here](configs/README.md).
 - <span style="color:red">**Red metrics**</span> are recommended for comprehensive evaluations.<br>
 Subscripts `I`, `R`, and `P` represent `image-level`, `region-level`, and `pixel-level`, respectively.
-- Each method trains 100 epochs.
 
 ### MVTec AD
 |                         Method                          | mAU-ROC<sub>I</sub> | mAP<sub>I</sub> | m*F*1-max<sub>I</sub> |<span style="color:red">mAU-PRO<sub>R</sub></span> | mAU-ROC<sub>P</sub> | mAP<sub>P</sub> | m*F*1-max<sub>P</sub> | m*F*1<sub>P/.2/.8</sub> | mAcc<sub>P/.2/.8</sub> |mIoU<sub>P/.2/.8</sub> | <span style="color:red">mIoU-max<sub>P</sub></span> | <span style="color:red">mAD<sub>I</sub></span> | <span style="color:red">mAD<sub>P</sub></span> | <span style="color:red">mAD<sub>.2/.8</sub></span> | <span style="color:red">mAD</span> |                                                                            <span style="color:blue">Download</span>                                                                            |
