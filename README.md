@@ -23,7 +23,7 @@
 
 - [x] 🚀 Multi-/Single-class Training and Testing
 - [x] 🚀 DDP Training
-- [x] 🚀 Convenient and flexible way to implement a new approach, refer to [here](###How to Build a Custom Approach).
+- [x] 🚀 Convenient and flexible way to implement a new approach, refer to [here](#How-to-Build-a-Custom-Approach).
 - [x] 🚀 [ViTAD](https://zhangzjn.github.io/projects/ViTAD)
 - [x] 🚀 [InvAD](https://zhangzjn.github.io/projects/InvAD): download [wide_resnet50_2](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/wide_resnet50_racm-8234f177.pth) in `TIMM` to `model/pretrain`
 - [x] Reproduced popular counterparts: 
