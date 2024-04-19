@@ -3,7 +3,7 @@
 </div>
 
 > - <span style="color:red">**ADer**</span> is an open source visual **A**nomaly **D**etection toolbox based on PyTorch, which supports multiple popular AD datasets and approaches. </br> 
-> - We reproduce popular AD method under the **M**ulti-class **U**nsupervised **A**nomaly **D**etection (<span style="color:red">**MUAD**</span>) by default. </br>
+> - We reproduce popular AD methods under the **M**ulti-class **U**nsupervised **A**nomaly **D**etection (<span style="color:red">**MUAD**</span>) by default. </br>
 > - We hope it can bring convenience to your research and application. </br>
 
 [//]: # (<p align="center">)
@@ -53,7 +53,7 @@
   
 ### Dataset Preparation 
 Please refer to [Datasets Description](data/README.md) for preparing visual AD datasets as needed.
-- [x] [Real-IAD](data/README.md/###Real-IAD): A new large-scale challenging industrial AD dataset, containing 30 classes with totally 151,050 images; 2,000∼5,000 resolution; 0.01%~6.75% defect proportions; 1:1~1:10 defect ratio.
+- [x] [Real-IAD](data/README.md/###Real-IAD): A new large-scale challenging industrial AD dataset, containing 30 classes with totally 151,050 images; 2,000 ∼ 5,000 resolution; 0.01% ~ 6.75% defect proportions; 1:1 ~ 1:10 defect ratio.
 - [x] [COCO-AD](data/README.md/###COCO-AD): Large-scale and general-purpose challenging AD-adapted dataset.
 - [x] [MVTec AD](data/README.md/###MVTec): Most popular AD dataset.
 - [x] [VisA](data/README.md/###VisA): Popular AD dataset.
