@@ -16,6 +16,7 @@
 
 ## 🐉 News
 - 🔥 <span style="color:red">**COCO-AD**</span> and powerful <span style="color:red">**InvAD**</span> is released 🐲 [**Paper**](https://arxiv.org/abs/2404.10760) | [**Project**](https://zhangzjn.github.io/projects/InvAD) | [**Code**](https://github.com/zhangzjn/ader/configs/invad)
+- 🔥 Mamba based <span style="color:red">**MambaAD**</span> is released 🐲 [**Paper**](https://arxiv.org/abs/2404.06564) | [**Project**](https://lewandofskee.github.io/projects/MambaAD) | [**Code**](https://github.com/lewandofskee/MambaAD)
 - 🔥 Plain ViT based <span style="color:red">**ViTAD**</span> is released 🐲 [**Paper**](https://arxiv.org/abs/2312.07495) | [**Project**](https://zhangzjn.github.io/projects/ViTAD) | [**Code**](https://github.com/zhangzjn/ader/configs/vitad)
 - 🔥 <span style="color:red">**Real-IAD**</span> is released: a new large-scale challenging industrial AD dataset 🐲 [**Paper**](https://arxiv.org/abs/2403.12580) | [**Project**](https://realiad4ad.github.io/Real-IAD) | [**Code**](https://github.com/TencentYoutuResearch/AnomalyDetection_Real-IAD) 
 
@@ -28,8 +29,8 @@
 - [x] 🚀 [InvAD](https://zhangzjn.github.io/projects/InvAD): download [wide_resnet50_2](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/wide_resnet50_racm-8234f177.pth) in `TIMM` to `model/pretrain`
 - [x] Reproduced popular counterparts: 
   - [x] 🚀 [UniAD, NeurIPS'22](https://github.com/zhiyuanyou/UniAD): download [efficientnet_b4](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b4_aa-818f208c.pth) in `TIMM` to `model/pretrain`
-  - [ ] [DiAD, AAAI'24](https://github.com/lewandofskee/DiAD)
-  - [ ] [MambaAD, arXiv'24](https://lewandofskee.github.io/projects/MambaAD)
+  - [ ] [DiAD, AAAI'24](https://lewandofskee.github.io/projects/diad/)
+  - [x] [MambaAD, arXiv'24](https://lewandofskee.github.io/projects/MambaAD)
 
 
 
