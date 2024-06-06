@@ -79,6 +79,17 @@ class KLLoss(nn.Module):
 
 
 @LOSS.register_module
+class LPIPSLoss(nn.Module):
+    def __init__(self, lam=1):
+        super(LPIPSLoss, self).__init__()
+        self.loss = None
+        self.lam = lam
+
+    def forward(self, input1, input2):
+        pass
+
+
+@LOSS.register_module
 class FocalLoss(nn.Module):
     """
     copy from: https://github.com/Hsuxu/Loss_ToolBox-PyTorch/blob/master/FocalLoss/FocalLoss.py
@@ -317,3 +328,16 @@ class FFocalLoss(nn.Module):
             loss = loss.sum() * self.lam
 
         return loss
+
+@LOSS.register_module
+class SegmentCELoss(nn.Module):
+    def __init__(self, weight):
+        super().__init__()
+        self.criterion = nn.CrossEntropyLoss()
+        self.weight = weight
+
+    def forward(self, mask, pred):
+        bsz,_,h,w=pred.size()
+        pred = pred.view(bsz, 2, -1)
+        mask = mask.view(bsz, -1).long()
+        return self.criterion(pred,mask)

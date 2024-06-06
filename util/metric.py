@@ -11,6 +11,9 @@ from torch.nn import functional as F
 
 from util.util import get_timepc, log_msg
 from util.registry import Registry
+
+from adeval import EvalAccumulatorCuda
+
 EVALUATOR = Registry('Evaluator')
 
 
@@ -30,7 +33,7 @@ def func(th, amaps, binary_amaps, masks):
 
 
 class Evaluator(object):
-    def __init__(self, metrics=[], pooling_ks=None, max_step_aupro=200, mp=False):
+    def __init__(self, metrics=[], pooling_ks=None, max_step_aupro=200, mp=False, use_adeval=False):
         if len(metrics) == 0:
             self.metrics = [
                 'mAUROC_sp_max', 'mAUROC_px', 'mAUPRO_px',
@@ -48,6 +51,9 @@ class Evaluator(object):
 
         self.eps = 1e-8
         self.beta = 1.0
+
+        self.boundary = 1e-7
+        self.use_adeval = use_adeval
 
     def run(self, results, cls_name, logger=None):
         idxes = results['cls_names'] == cls_name
@@ -77,6 +83,19 @@ class Evaluator(object):
         else:
             pr_sp_max = pr_px.max(axis=(1, 2))
             pr_sp_mean = pr_px.mean(axis=(1, 2))
+
+        if self.use_adeval:
+            score_min = min(pr_sp_max) - self.boundary
+            score_max = max(pr_sp_max) + self.boundary
+            anomap_min = pr_px.min()
+            anomap_max = pr_px.max()
+            accum = EvalAccumulatorCuda(score_min, score_max, anomap_min, anomap_max, skip_pixel_aupro=False, nstrips=50)
+            accum.add_anomap_batch(torch.tensor(pr_px).cuda(non_blocking=True),
+                                   torch.tensor(gt_px.astype(np.uint8)).cuda(non_blocking=True))
+            for i in range(torch.tensor(pr_px).size(0)):
+                accum.add_image(torch.tensor(pr_sp_max[i]), torch.tensor(gt_sp[i]))
+            metrics = accum.summary()
+
         metric_str = f'==> Metric Time for {cls_name:<15}: '
         metric_results = {}
         for metric in self.metrics:
@@ -84,6 +103,11 @@ class Evaluator(object):
             if metric.startswith('mAUROC_sp_max'):
                 auroc_sp = roc_auc_score(gt_sp, pr_sp_max)
                 metric_results[metric] = auroc_sp
+                # if not self.use_adeval:
+                #     auroc_sp = roc_auc_score(gt_sp, pr_sp_max)
+                #     metric_results[metric] = auroc_sp
+                # else:
+                #     metric_results[metric] = metrics['i_auroc']
             elif metric.startswith('mAUROC_sp_mean'):
                 auroc_sp = roc_auc_score(gt_sp, pr_sp_mean)
                 metric_results[metric] = auroc_sp
@@ -94,20 +118,34 @@ class Evaluator(object):
                 auroc_sp = roc_auc_score(gt_sa, pr_sa_max)
                 metric_results[metric] = auroc_sp
             elif metric.startswith('mAUROC_px'):
-                auroc_px = roc_auc_score(gt_px.ravel(), pr_px.ravel())
-                metric_results[metric] = auroc_px
+                if not self.use_adeval:
+                    auroc_px = roc_auc_score(gt_px.ravel(), pr_px.ravel())
+                    metric_results[metric] = auroc_px
+                else:
+                    metric_results[metric] = metrics['p_auroc']
             elif metric.startswith('mAUPRO_px'):
-                aupro_px = self.cal_pro_score(gt_px, pr_px, max_step=self.max_step_aupro, mp=self.mp)
-                metric_results[metric] = aupro_px
+                if not self.use_adeval:
+                    aupro_px = self.cal_pro_score(gt_px, pr_px, max_step=self.max_step_aupro, mp=self.mp)
+                    metric_results[metric] = aupro_px
+                else:
+                    metric_results[metric] = metrics['p_aupro']
             elif metric.startswith('mAP_sp_max'):
                 ap_sp = average_precision_score(gt_sp, pr_sp_max)
                 metric_results[metric] = ap_sp
+                # if not self.use_adeval:
+                #     ap_sp = average_precision_score(gt_sp, pr_sp_max)
+                #     metric_results[metric] = ap_sp
+                # else:
+                #     metric_results[metric] = metrics['i_aupr']
             elif metric.startswith('AP_sp_mean'):
                 ap_sp = average_precision_score(gt_sp, pr_sp_mean)
                 metric_results[metric] = ap_sp
             elif metric.startswith('mAP_px'):
-                ap_px = average_precision_score(gt_px.ravel(), pr_px.ravel())
-                metric_results[metric] = ap_px
+                if not self.use_adeval:
+                    ap_px = average_precision_score(gt_px.ravel(), pr_px.ravel())
+                    metric_results[metric] = ap_px
+                else:
+                    metric_results[metric] = metrics['p_aupr']
             elif metric.startswith('mAP_sa_max'):
                 ap_sp = average_precision_score(gt_sa, pr_sa_max)
                 metric_results[metric] = ap_sp

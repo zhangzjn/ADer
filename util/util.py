@@ -9,6 +9,10 @@ import torch
 from tensorboardX import SummaryWriter
 
 
+def t2np(tensor):
+    '''pytorch tensor -> numpy array'''
+    return tensor.cpu().data.numpy() if tensor is not None else None
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True

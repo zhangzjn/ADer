@@ -15,22 +15,42 @@
 [//]: # (</p>)
 
 ## 🐉 News
+- 🔥 We have released several reproduced models, configuration files, and training logs in our <span style="color:red">**benchmark**</span> paper 🐲 [**Paper**](https://arxiv.org/abs/2406.03262) | [**Results & CFGs**](configs/benchmark/README.md)
 - 🔥 <span style="color:red">**COCO-AD**</span> and powerful <span style="color:red">**InvAD**</span> is released 🐲 [**Paper**](https://arxiv.org/abs/2404.10760) | [**Project**](https://zhangzjn.github.io/projects/InvAD) | [**Code**](https://github.com/zhangzjn/ader/configs/invad)
-- 🔥 Mamba based <span style="color:red">**MambaAD**</span> is released 🐲 [**Paper**](https://arxiv.org/abs/2404.06564) | [**Project**](https://lewandofskee.github.io/projects/MambaAD) | [**Code**](https://github.com/lewandofskee/MambaAD)
 - 🔥 Plain ViT based <span style="color:red">**ViTAD**</span> is released 🐲 [**Paper**](https://arxiv.org/abs/2312.07495) | [**Project**](https://zhangzjn.github.io/projects/ViTAD) | [**Code**](https://github.com/zhangzjn/ader/configs/vitad)
 - 🔥 <span style="color:red">**Real-IAD**</span> is released: a new large-scale challenging industrial AD dataset 🐲 [**Paper**](https://arxiv.org/abs/2403.12580) | [**Project**](https://realiad4ad.github.io/Real-IAD) | [**Code**](https://github.com/TencentYoutuResearch/AnomalyDetection_Real-IAD) 
 
 ## 💡 Property
 
 - [x] 🚀 Multi-/Single-class Training and Testing
-- [x] 🚀 DDP Training
 - [x] 🚀 Convenient and flexible way to implement a new approach, refer to [here](#How-to-Build-a-Custom-Approach).
-- [x] 🚀 [ViTAD](https://zhangzjn.github.io/projects/ViTAD)
-- [x] 🚀 [InvAD](https://zhangzjn.github.io/projects/InvAD): download [wide_resnet50_2](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/wide_resnet50_racm-8234f177.pth) in `TIMM` to `model/pretrain`
-- [x] Reproduced popular counterparts: 
-  - [x] 🚀 [UniAD, NeurIPS'22](https://github.com/zhiyuanyou/UniAD): download [efficientnet_b4](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b4_aa-818f208c.pth) in `TIMM` to `model/pretrain`
-  - [ ] [DiAD, AAAI'24](https://lewandofskee.github.io/projects/diad/)
-  - [x] [MambaAD, arXiv'24](https://lewandofskee.github.io/projects/MambaAD)
+- [x] Reproduced popular methods in [ADer Benchmark](https://arxiv.org/abs/2406.03262): 
+  - 🚀Augmentation-based
+    - [x] [DRAEM, ICCV'21](https://github.com/VitjanZ/DRAEM)
+    - [x] [SimpleNet, CVPR'23](https://github.com/DonaldRR/SimpleNet)
+    - [x] [RealNet, CVPR'24](https://github.com/cnulab/RealNet)
+  - 🚀Embedding-based
+    - [x] [CFA, Access'22](https://github.com/sungwool/CFA_for_anomaly_localization)
+    - [x] [PatchCore, CVPR'22](https://github.com/amazon-science/patchcore-inspection)
+    - [x] [CFLOW-AD, WACV'22](https://github.com/gudovskiy/cflow-ad)
+    - [x] [PyramidalFlow, CVPR'23](https://github.com/gasharper/PyramidFlow)
+  - 🚀Reconstruction-based
+    - [x] [ViTAD, arXiv'23](https://zhangzjn.github.io/projects/ViTAD)
+    - [x] [InvAD, arXiv'24](https://zhangzjn.github.io/projects/InvAD)
+    - [x] [InvAD-lite, arXiv'24](https://zhangzjn.github.io/projects/InvAD)
+    - [ ] [DiAD, AAAI'24](https://github.com/lewandofskee/DiAD): See tripartite implementation in this [website](https://github.com/lewandofskee/DiAD)
+    - [x] [MambaAD, arXiv'24](https://github.com/lewandofskee/MambaAD)
+    - [x] [RD, CVPR'22](https://github.com/hq-deng/RD4AD)
+  - 🚀Hybrid
+    - [x] [UniAD, NeurIPS'22](https://github.com/zhiyuanyou/UniAD): download  in `TIMM` to `model/pretrain`
+    - [x] [RD++, CVPR'23](https://github.com/tientrandinh/Revisiting-Reverse-Distillation)
+    - [x] [DesTSeg, CVPR'23](https://github.com/apple/ml-destseg)
+- [x] 🚀 (Opt.) DDP Training
+- [x] By default, the weights used by different methods are automatically downloaded (`model.kwargs.pretrained=True`, `model.kwargs.checkpoint_path=''`). If you prefer to specify offline weights, you can download the model weights to `model/pretrain` and modify the settings to `model.kwargs.pretrained=False`, `model.kwargs.checkpoint_path='model/pretrain/xxx.pth'`. 
+
+[//]: # (- Some pre-trained weights that may be used: )
+[//]: # (  - [wide_resnet50_2]&#40;https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/wide_resnet50_racm-8234f177.pth&#41; in `TIMM`)
+[//]: # (  - [efficientnet_b4]&#40;https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/tf_efficientnet_b4_aa-818f208c.pth&#41; in `TIMM`)
 
 
 
@@ -48,7 +68,9 @@
   pip3 install timm==0.8.15dev0 mmselfsup pandas transformers openpyxl imgaug numba numpy tensorboard fvcore accimage Ninja
   pip3 install mmdet==2.25.3
   pip3 install --upgrade protobuf==3.20.1 scikit-image faiss-gpu
+  pip3 install adeval
   pip3 install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu118
+  pip3 install fastprogress geomloss FrEIA mamba_ssm adeval fvcore==0.1.5.post20221221
   (or) conda install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=11.8 -c pytorch -c nvidia
   ```
   
@@ -56,11 +78,12 @@
 Please refer to [Datasets Description](data/README.md) for preparing visual AD datasets as needed.
 - [x] [Real-IAD](data/README.md/###Real-IAD): A new large-scale challenging industrial AD dataset, containing 30 classes with totally 151,050 images; 2,000 ∼ 5,000 resolution; 0.01% ~ 6.75% defect proportions; 1:1 ~ 1:10 defect ratio.
 - [x] [COCO-AD](data/README.md/###COCO-AD): Large-scale and general-purpose challenging AD-adapted dataset.
-- [x] [MVTec AD](data/README.md/###MVTec): Most popular AD dataset.
+- [x] [MVTec AD](data/README.md/###MVTec AD): Most popular AD dataset.
 - [x] [VisA](data/README.md/###VisA): Popular AD dataset.
 - [x] [Uni-Medical](data/README.md/###Uni-Medical): Unified medical AD dataset.
-- [x] (Opt.) [MVTec 3D-AD](data/README.md/###MVTec3D): Improved 3D version of MVTec AD.
+- [x] (Opt.) [MVTec 3D-AD](data/README.md/###MVTec 3D-AD): Improved 3D version of MVTec AD.
 - [x] (Opt.) [Cifar10 & Cifar100](data/README.md/###Cifar): For one-class-train, one-class-test, and unified settings.
+- [x] (Opt.) [Tiny-ImageNet](data/README.md/###Tiny-ImageNet-200): A larger one-class dataset.
 
 ### Train (Multi-class Unsupervised AD setting by default, MUAD)
 - Check `data` and `model` settings for the config file `configs/METHOD/METHOD_CFG.py`
@@ -97,6 +120,7 @@ Please refer to [Datasets Description](data/README.md) for preparing visual AD d
 ## 📜 MUAD Results on Popular AD Datasets
 - <span style="color:red">**Red metrics**</span> are recommended for comprehensive evaluations.<br>
 Subscripts `I`, `R`, and `P` represent `image-level`, `region-level`, and `pixel-level`, respectively.
+- The following results are derived from the original paper. Since the [benchmark](configs/benchmark/README.md) re-runs all experiments on the same `L40S` platform, slight differences in the results are reasonable.
 
 ### MVTec AD
 |                         Method                          | mAU-ROC<sub>I</sub> | mAP<sub>I</sub> | m*F*1-max<sub>I</sub> |<span style="color:red">mAU-PRO<sub>R</sub></span> | mAU-ROC<sub>P</sub> | mAP<sub>P</sub> | m*F*1-max<sub>P</sub> | m*F*1<sub>P/.2/.8</sub> | mAcc<sub>P/.2/.8</sub> |mIoU<sub>P/.2/.8</sub> | <span style="color:red">mIoU-max<sub>P</sub></span> | <span style="color:red">mAD<sub>I</sub></span> | <span style="color:red">mAD<sub>P</sub></span> | <span style="color:red">mAD<sub>.2/.8</sub></span> | <span style="color:red">mAD</span> |                                                                            <span style="color:blue">Download</span>                                                                            |
@@ -157,6 +181,13 @@ Subscripts `I`, `R`, and `P` represent `image-level`, `region-level`, and `pixel
 ## Citation
 If you use this toolbox or benchmark in your research, please cite our related works.
 ```angular2html
+@article{ader,
+  title={ADer: A Comprehensive Benchmark for Multi-class Visual Anomaly Detection},
+  author={Jiangning Zhang and Haoyang He and Zhenye Gan and Qingdong He and Yuxuan Cai and Zhucun Xue and Yabiao Wang and Chengjie Wang and Lei Xie and Yong Liu},
+  journal={arXiv preprint arXiv:2406.03262},
+  year={2024}
+}
+
 @inproceedings{realiad,
   title={Real-IAD: A Real-World Multi-View Dataset for Benchmarking Versatile Industrial Anomaly Detection},
   author={Wang, Chengjie and Zhu, Wenbing and Gao, Bin-Bin and Gan, Zhenye and Zhang, Jianning and Gu, Zhihao and Qian, Shuguang and Chen, Mingang and Ma, Lizhuang},

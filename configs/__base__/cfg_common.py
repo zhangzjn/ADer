@@ -21,8 +21,9 @@ class cfg_common(Namespace):
 			'mF1_px_0.2_0.8_0.1', 'mAcc_px_0.2_0.8_0.1', 'mIoU_px_0.2_0.8_0.1',
 			'mIoU_max_px',
 		]
+		self.use_adeval = True
 		self.evaluator = Namespace()
-		self.evaluator.kwargs = dict(metrics=self.metrics, pooling_ks=[16, 16], max_step_aupro=100, mp=False)
+		self.evaluator.kwargs = dict(metrics=self.metrics, pooling_ks=[16, 16], max_step_aupro=100, mp=False, use_adeval=self.use_adeval)
 
 		# ==> optim
 		self.optim = Namespace()
