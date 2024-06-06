@@ -51,10 +51,11 @@ class cfg(cfg_common, cfg_dataset_default, cfg_model_uniad):
 			dict(type='ToTensor'),
 		]
 
+		checkpoint_path = 'model/pretrain/tf_efficientnet_b4_aa-818f208c.pth'
 		self.model_backbone = Namespace()
 		self.model_backbone.name = 'timm_tf_efficientnet_b4'
-		self.model_backbone.kwargs = dict(pretrained=False,
-										  checkpoint_path='model/pretrain/tf_efficientnet_b4_aa-818f208c.pth',
+		self.model_backbone.kwargs = dict(pretrained=True,
+										  checkpoint_path='',
 										  strict=False,
 										  hf=None, features_only=True, out_indices=[0, 1, 2, 3])
 

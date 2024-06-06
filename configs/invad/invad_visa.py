@@ -65,8 +65,8 @@ class cfg(cfg_common, cfg_dataset_default, cfg_model_invad):
 		latent_channel_size = 16
 		self.model_encoder = Namespace()
 		self.model_encoder.name = name
-		self.model_encoder.kwargs = dict(pretrained=False,
-										 checkpoint_path=checkpoint_path,
+		self.model_encoder.kwargs = dict(pretrained=True,
+										 checkpoint_path='',
 										 strict=False,
 										 features_only=True, out_indices=out_indices)
 

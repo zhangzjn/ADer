@@ -53,7 +53,7 @@ class cfg(cfg_common, cfg_dataset_default, cfg_model_vitad):
 
 		self.model_t = Namespace()
 		self.model_t.name = 'vit_small_patch16_224_dino'
-		self.model_t.kwargs = dict(pretrained=True, checkpoint_path='', pretrained_cfg=dict(file='model/pretrain/dino_deitsmall16_pretrain.pth'), pretrained_strict=False, strict=True,
+		self.model_t.kwargs = dict(pretrained=True, checkpoint_path='', pretrained_strict=False, strict=True,
 								   img_size=self.size, teachers=[3, 6, 9], neck=[12])
 		self.model_f = Namespace()
 		self.model_f.name = 'fusion'
