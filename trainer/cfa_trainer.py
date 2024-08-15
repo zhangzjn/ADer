@@ -32,6 +32,8 @@ from ._base_trainer import BaseTrainer
 from . import TRAINER
 import torch.nn.functional as F
 from scipy.ndimage import gaussian_filter
+from util.vis import vis_rgb_gt_amp
+
 
 # import torchvision
 # torchvision.set_image_backend('accimage')
@@ -69,6 +71,7 @@ class CFATrainer(BaseTrainer):
         self.imgs_mask = inputs['img_mask'].cuda()
         self.cls_name = inputs['cls_name']
         self.anomaly = inputs['anomaly']
+        self.img_path = inputs['img_path']
         self.bs = self.imgs.shape[0]
     
     # def set_input(self, inputs):
@@ -209,9 +212,17 @@ class CFATrainer(BaseTrainer):
             # post processing
             anomaly_map = self.loss_score
             anomaly_map = torch.mean(anomaly_map, dim=1, keepdim=True)
+            anomaly_map = F.interpolate(anomaly_map, size=self.imgs.size(2), mode='bilinear')
             # import pdb;pdb.set_trace()
             
             self.imgs_mask[self.imgs_mask > 0.5], self.imgs_mask[self.imgs_mask <= 0.5] = 1, 0
+            if self.cfg.vis:
+                if self.cfg.vis_dir is not None:
+                    root_out = self.cfg.vis_dir
+                else:
+                    root_out = self.writer.logdir
+                vis_rgb_gt_amp(self.img_path, self.imgs, self.imgs_mask.cpu().numpy().astype(int), anomaly_map.squeeze(1).cpu().numpy(),
+                               self.cfg.model.name, root_out, self.cfg.data.root.split('/')[1])
             imgs_masks.append(self.imgs_mask.cpu().numpy().astype(int))
             cls_names.append(np.array(self.cls_name))
             anomaly_maps.append(anomaly_map)
@@ -226,7 +237,6 @@ class CFATrainer(BaseTrainer):
                     log_msg(self.logger, msg)
         
         anomaly_maps = torch.cat(anomaly_maps, dim=0)
-        anomaly_maps = F.interpolate(anomaly_maps, size=self.imgs.size(2),  mode='bilinear')
         anomaly_maps = self.gaussian_smooth(anomaly_maps.cpu().detach())
 
         anomaly_maps = (anomaly_maps - anomaly_maps.min()) / (anomaly_maps.max() - anomaly_maps.min())

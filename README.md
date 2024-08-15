@@ -22,6 +22,7 @@
 
 ## 💡 Property
 
+- [x] 🚀Support Visualization
 - [x] 🚀 Multi-/Single-class Training and Testing
 - [x] 🚀 Convenient and flexible way to implement a new approach, refer to [here](#How-to-Build-a-Custom-Approach).
 - [x] Reproduced popular methods in [ADer Benchmark](https://arxiv.org/abs/2406.03262): 
@@ -107,6 +108,10 @@ Please refer to [Datasets Description](data/README.md) for preparing visual AD d
 - Modify `trainer.resume_dir` or `model.kwargs['checkpoint_path']`
 - Test with single GPU example: `CUDA_VISIBLE_DEVICES=0 python run.py -c configs/METHOD/METHOD_cfg.py -m test`
 - Test with multiple GPUs (DDP) in one node:  `python -m torch.distributed.launch --nproc_per_node=$nproc_per_node --nnodes=$nnodes --node_rank=$node_rank --master_addr=$master_addr --master_port=$master_port --use_env run.py -c configs/METHOD/METHOD_CFG.py -m test`.
+
+### Visualization
+- Modify `trainer.resume_dir` or `model.kwargs['checkpoint_path']`
+- Visualize with single GPU example: `CUDA_VISIBLE_DEVICES=0 python run.py -c configs/METHOD/METHOD_cfg.py -m test vis=True vis_dir=VISUALIZATION_DIR`
 
 ### How to Build a Custom Approach
 1. Add a model config `cfg_model_MODEL_NAME` to `configs/__base__`

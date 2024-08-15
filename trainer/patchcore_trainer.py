@@ -31,22 +31,110 @@ from timm.utils import dispatch_clip_grad
 
 from ._base_trainer import BaseTrainer
 from . import TRAINER
+from util.vis import vis_rgb_gt_amp
 
 
 @TRAINER.register_module
-class PatchCoreTrainer(BaseTrainer):
+class PatchCoreTrainer():
 	def __init__(self, cfg):
-		super(PatchCoreTrainer, self).__init__(cfg)
-		print('optim finish!')
+		self.cfg = cfg
+		self.master, self.logger, self.writer = cfg.master, cfg.logger, cfg.writer
+		self.local_rank, self.rank, self.world_size = cfg.local_rank, cfg.rank, cfg.world_size
+		log_msg(self.logger, '==> Running Trainer: {}'.format(cfg.trainer.name))
+		# =========> model <=================================
+		log_msg(self.logger, '==> Using GPU: {} for Training'.format(list(range(cfg.world_size))))
+		log_msg(self.logger, '==> Building model')
+		self.net = get_model(cfg.model)
+		self.net.to('cuda:{}'.format(cfg.local_rank))
+		self.net.eval()
+		log_msg(self.logger, f"==> Load checkpoint: {cfg.model.kwargs['checkpoint_path']}") if cfg.model.kwargs[
+			'checkpoint_path'] else None
+		# print_networks([self.net], torch.randn(self.cfg.fvcore_b, self.cfg.fvcore_c, self.cfg.size, self.cfg.size).cuda(), self.logger) if self.cfg.fvcore_is else None
+		self.dist_BN = cfg.trainer.dist_BN
+		if cfg.dist and cfg.trainer.sync_BN != 'none':
+			self.dist_BN = ''
+			log_msg(self.logger, f'==> Synchronizing BN by {cfg.trainer.sync_BN}')
+			syncbn_dict = {'apex': ApexSyncBN, 'native': torch.nn.SyncBatchNorm.convert_sync_batchnorm,
+						   'timm': TIMMSyncBN}
+			self.net = syncbn_dict[cfg.trainer.sync_BN](self.net)
+		log_msg(self.logger, '==> Creating optimizer')
+		# cfg.optim.lr *= cfg.trainer.data.batch_size / 512
+		# cfg.trainer.scheduler_kwargs['lr_min'] *= cfg.trainer.data.batch_size / 512
+		# cfg.trainer.scheduler_kwargs['warmup_lr'] *= cfg.trainer.data.batch_size / 512
+		self.optim = get_optim(cfg.optim.kwargs, self.net, lr=cfg.optim.lr)
+		self.amp_autocast = get_autocast(cfg.trainer.scaler)
+		self.loss_scaler = get_loss_scaler(cfg.trainer.scaler)
+		self.loss_terms = get_loss_terms(cfg.loss.loss_terms, device='cuda:{}'.format(cfg.local_rank))
+		if cfg.trainer.scaler == 'apex':
+			self.net, self.optim = amp.initialize(self.net, self.optim, opt_level='O1')
+		if cfg.dist:
+			if cfg.trainer.scaler in ['none', 'native']:
+				log_msg(self.logger, '==> Native DDP')
+				self.net = NativeDDP(self.net, device_ids=[cfg.local_rank],
+									 find_unused_parameters=cfg.trainer.find_unused_parameters)
+			elif cfg.trainer.scaler in ['apex']:
+				log_msg(self.logger, '==> Apex DDP')
+				self.net = ApexDDP(self.net, delay_allreduce=True)
+			else:
+				raise 'Invalid scaler mode: {}'.format(cfg.trainer.scaler)
+		# =========> dataset <=================================
+		cfg.logdir_train, cfg.logdir_test = f'{cfg.logdir}/show_train', f'{cfg.logdir}/show_test'
+		makedirs([cfg.logdir_train, cfg.logdir_test], exist_ok=True)
+		log_msg(self.logger, "==> Loading dataset: {}".format(cfg.data.type))
+		self.train_loader, self.test_loader = get_loader(cfg)
+		cfg.data.train_size, cfg.data.test_size = len(self.train_loader), len(self.test_loader)
+		cfg.data.train_length, cfg.data.test_length = self.train_loader.dataset.length, self.test_loader.dataset.length
+		self.cls_names = self.train_loader.dataset.cls_names
+		self.mixup_fn = Mixup(**cfg.trainer.mixup_kwargs) if cfg.trainer.mixup_kwargs['prob'] > 0 else None
+		self.scheduler = get_scheduler(cfg, self.optim)
+		self.evaluator = get_evaluator(cfg.evaluator)
+		self.metrics = self.evaluator.metrics
+		self.adv = cfg.adv
+		if self.adv:
+			self.g_reg_every, self.d_reg_every = cfg.g_reg_every, cfg.d_reg_every
+		if hasattr(cfg.trainer, 'metric_recorder'):
+			self.metric_recorder = cfg.trainer.metric_recorder
+		else:
+			cfg.trainer.metric_recorder = dict()
+			for idx, cls_name in enumerate(self.cls_names):
+				for metric in self.metrics:
+					cfg.trainer.metric_recorder.update({f'{metric}_{cls_name}': []})
+					if idx == len(self.cls_names) - 1 and len(self.cls_names) > 1:
+						cfg.trainer.metric_recorder.update({f'{metric}_Avg': []})
+			self.metric_recorder = cfg.trainer.metric_recorder
+		self.iter, self.epoch = cfg.trainer.iter, cfg.trainer.epoch
+		self.iter_full, self.epoch_full = cfg.trainer.iter_full, cfg.trainer.epoch_full
+		if cfg.trainer.resume_dir:
+			state_dict = torch.load(cfg.model.kwargs['checkpoint_path'], map_location='cpu')
+			self.optim.load_state_dict(state_dict['optimizer'])
+			self.scheduler.load_state_dict(state_dict['scheduler'])
+			self.loss_scaler.load_state_dict(state_dict['scaler']) if self.loss_scaler else None
+			self.cfg.task_start_time = get_timepc() - state_dict['total_time']
+		# self.tmp_dir = f'/dev/shm/tmp/{cfg.logdir}'
+		# tmp_dir = f'/dev/shm/tmp/tmp'
+		tmp_dir = f'{cfg.trainer.checkpoint}/tmp'
+		tem_i = 0
+		while os.path.exists(f'{tmp_dir}/{tem_i}'):
+			tem_i += 1
+		self.tmp_dir = f'{tmp_dir}/{tem_i}'
+		log_cfg(self.cfg)
+
 	def set_input(self, inputs):
 		self.imgs = inputs['img'].cuda()
 		self.imgs_mask = inputs['img_mask'].cuda()
 		self.cls_name = inputs['cls_name']
 		self.anomaly = inputs['anomaly']
+		self.img_path = inputs['img_path']
 		self.bs = self.imgs.shape[0]
 
 	def forward(self):
 		self.net.net_patchcore.fit(self.train_loader)
+
+	def reset(self, isTrain=True):
+		self.net.train(mode=isTrain)
+		self.log_terms, self.progress = get_log_terms(
+			able(self.cfg.logging.log_terms_train, isTrain, self.cfg.logging.log_terms_test),
+			default_prefix=('Train' if isTrain else 'Test'))
 
 	def backward_term(self):
 		pass
@@ -56,6 +144,24 @@ class PatchCoreTrainer(BaseTrainer):
 
 	def scheduler_step(self,step):
 		pass
+
+	def _finish(self):
+		log_msg(self.logger, 'finish training')
+		self.writer.close() if self.master else None
+		metric_list = []
+		for idx, cls_name in enumerate(self.cls_names):
+			for metric in self.metrics:
+				metric_list.append(self.metric_recorder[f'{metric}_{cls_name}'])
+				if idx == len(self.cls_names) - 1 and len(self.cls_names) > 1:
+					metric_list.append(self.metric_recorder[f'{metric}_Avg'])
+		f = open(f'{self.cfg.logdir}/metric.txt', 'w')
+		msg = ''
+		for i in range(len(metric_list[0])):
+			for j in range(len(metric_list)):
+				msg += '{:3.5f}\t'.format(metric_list[j][i])
+			msg += '\n'
+		f.write(msg)
+		f.close()
 
 	def train(self):
 		self.reset(isTrain=True)
@@ -134,6 +240,12 @@ class PatchCoreTrainer(BaseTrainer):
 			anomaly_map = self.preds
 			anomaly_score = self.scores
 			self.imgs_mask[self.imgs_mask > 0.5], self.imgs_mask[self.imgs_mask <= 0.5] = 1, 0
+			if self.cfg.vis:
+				if self.cfg.vis_dir is not None:
+					root_out = self.cfg.vis_dir
+				else:
+					root_out = self.writer.logdir
+				vis_rgb_gt_amp(self.img_path, self.imgs, self.imgs_mask.cpu().numpy().astype(int), anomaly_map, self.cfg.model.name, root_out, self.cfg.data.root.split('/')[1])
 			imgs_masks.append(self.imgs_mask.cpu().numpy().astype(int))
 			anomaly_maps.append(anomaly_map)
 			anomaly_scores.append(anomaly_score)
@@ -200,3 +312,37 @@ class PatchCoreTrainer(BaseTrainer):
 						msg[f'{metric} (Max)'].append(f'{max_metric:.3f} ({max_metric_idx:<3d} epoch)')
 			msg = tabulate.tabulate(msg, headers='keys', tablefmt="pipe", floatfmt='.3f', numalign="center", stralign="center", )
 			log_msg(self.logger, f'\n{msg}')
+
+	@torch.no_grad()
+	def test_ghost(self):
+		for idx, cls_name in enumerate(self.cls_names):
+			for metric in self.metrics:
+				self.metric_recorder[f'{metric}_{cls_name}'].append(0)
+				if idx == len(self.cls_names) - 1 and len(self.cls_names) > 1:
+					self.metric_recorder[f'{metric}_Avg'].append(0)
+	def save_checkpoint(self):
+		if self.master:
+			checkpoint_info = {'net': trans_state_dict(self.net.state_dict(), dist=False),
+							   'optimizer': self.optim.state_dict(),
+							   'scheduler': self.scheduler.state_dict(),
+							   'scaler': self.loss_scaler.state_dict() if self.loss_scaler else None,
+							   'iter': self.iter,
+							   'epoch': self.epoch,
+							   'metric_recorder': self.metric_recorder,
+							   'total_time': self.cfg.total_time}
+			save_path = f'{self.cfg.logdir}/ckpt.pth'
+			torch.save(checkpoint_info, save_path)
+			torch.save(checkpoint_info['net'], f'{self.cfg.logdir}/net.pth')
+			if self.epoch % self.cfg.trainer.test_per_epoch == 0:
+				torch.save(checkpoint_info['net'], f'{self.cfg.logdir}/net_{self.epoch}.pth')
+
+
+	def run(self):
+		log_msg(self.logger,
+				f'==> Starting {self.cfg.mode}ing with {self.cfg.nnodes} nodes x {self.cfg.ngpus_per_node} GPUs')
+		if self.cfg.mode in ['train']:
+			self.train()
+		elif self.cfg.mode in ['test']:
+			self.test()
+		else:
+			raise NotImplementedError

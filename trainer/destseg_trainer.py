@@ -33,6 +33,7 @@ from timm.utils import dispatch_clip_grad
 from ._base_trainer import BaseTrainer
 from . import TRAINER
 import torch.nn.functional as F
+from util.vis import vis_rgb_gt_amp
 
 @TRAINER.register_module
 class DeSTSegTrainer(BaseTrainer):
@@ -60,6 +61,7 @@ class DeSTSegTrainer(BaseTrainer):
         self.imgs_mask = inputs['img_mask'].cuda()
         self.cls_name = inputs['cls_name']
         self.anomaly = inputs['anomaly']
+        self.img_path = inputs['img_path']
 
     def forward(self):
         self.output_segmentation, self.output_de_st, self.output_de_st_list, self.new_mask = self.net(self.imgs, self.ori_imgs, self.imgs_mask)
@@ -140,6 +142,13 @@ class DeSTSegTrainer(BaseTrainer):
             )
             anomaly_scores.append(output_segmentation_sample.detach().cpu().numpy())
             self.imgs_mask[self.imgs_mask > 0.5], self.imgs_mask[self.imgs_mask <= 0.5] = 1, 0
+            if self.cfg.vis:
+                if self.cfg.vis_dir is not None:
+                    root_out = self.cfg.vis_dir
+                else:
+                    root_out = self.writer.logdir
+                vis_rgb_gt_amp(self.img_path, self.imgs, self.imgs_mask.cpu().numpy().astype(int), anomaly_map,
+                               self.cfg.model.name, root_out, self.cfg.data.root.split('/')[1])
             imgs_masks.append(self.imgs_mask.cpu().numpy().astype(int))
             anomaly_maps.append(anomaly_map)
             cls_names.append(np.array(self.cls_name))

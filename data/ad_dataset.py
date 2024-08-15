@@ -740,8 +740,8 @@ class Draem(data.Dataset):
 			img_path, mask_path, cls_name, specie_name, anomaly = data['img_path'], data['mask_path'], data['cls_name'], \
 																  data['specie_name'], data['anomaly']
 
-			image_path = os.path.join(self.root, img_path)
-			image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+			img_path = f'{self.root}/{img_path}'
+			image = cv2.imread(img_path, cv2.IMREAD_COLOR)
 			if mask_path != '':
 				mask_path = os.path.join(self.root, mask_path)
 				# mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
@@ -933,8 +933,8 @@ class DeSTSeg(data.Dataset):
 			img_path, mask_path, cls_name, specie_name, anomaly = data['img_path'], data['mask_path'], data['cls_name'], \
 																  data['specie_name'], data['anomaly']
 
-			image_path = os.path.join(self.root, img_path)
-			image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+			img_path = f'{self.root}/{img_path}'
+			image = cv2.imread(img_path, cv2.IMREAD_COLOR)
 			if mask_path != '':
 				mask_path = os.path.join(self.root, mask_path)
 				# mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
@@ -1287,8 +1287,8 @@ class Realnet(data.Dataset):
 			img_path, mask_path, cls_name, specie_name, anomaly = data['img_path'], data['mask_path'], data['cls_name'], \
 				data['specie_name'], data['anomaly']
 
-			image_path = os.path.join(self.root, img_path)
-			image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+			img_path = f'{self.root}/{img_path}'
+			image = cv2.imread(img_path, cv2.IMREAD_COLOR)
 			image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # realnet imagereader setting
 			image = Image.fromarray(image, "RGB")
 
@@ -1329,8 +1329,8 @@ class Realnet(data.Dataset):
 			img_path, mask_path, cls_name, specie_name, anomaly = data['img_path'], data['mask_path'], data['cls_name'], \
 				data['specie_name'], data['anomaly']
 
-			image_path = os.path.join(self.root, img_path)
-			image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+			img_path = f'{self.root}/{img_path}'
+			image = cv2.imread(img_path, cv2.IMREAD_COLOR)
 			image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # realnet imagereader setting
 			image = Image.fromarray(image, "RGB")
 

@@ -31,6 +31,7 @@ from timm.utils import dispatch_clip_grad
 
 from ._base_trainer import BaseTrainer
 from . import TRAINER
+from util.vis import vis_rgb_gt_amp
 
 
 @TRAINER.register_module
@@ -43,12 +44,13 @@ class SimpleNetTrainer(BaseTrainer):
 		# self.optim.dsc_opt = get_optim(cfg.optim.dsc_opt.kwargs, self.net.net_simplenet.discriminator, lr=dsc_opt_kwargs['lr'], kwargs=dsc_opt_kwargs)
 		self.optim.proj_opt = get_optim(cfg.optim.proj_opt.kwargs, self.net.net_simplenet.pre_projection, lr=cfg.optim.lr*.1)
 		self.optim.dsc_opt = get_optim(cfg.optim.dsc_opt.kwargs, self.net.net_simplenet.discriminator, lr=cfg.optim.lr*.2)
-		print('optim finish!')
+
 	def set_input(self, inputs):
 		self.imgs = inputs['img'].cuda()
 		self.imgs_mask = inputs['img_mask'].cuda()
 		self.cls_name = inputs['cls_name']
 		self.anomaly = inputs['anomaly']
+		self.img_path = inputs['img_path']
 		self.bs = self.imgs.shape[0]
 
 	def forward(self):
@@ -104,17 +106,22 @@ class SimpleNetTrainer(BaseTrainer):
 			batch_idx += 1
 			test_data = next(test_loader)
 			self.set_input(test_data)
-			self.scores, self.preds = self.net.net_simplenet.predict(test_data)
+			self.scores, self.preds = self.net.net_simplenet.predict(self.imgs)
 			# self.forward()
 			# self.net.predict()
-			# loss_cos = self.loss_terms['sum'](self.true_loss, self.fake_loss)
-			loss_cos = 0
+			loss_cos = self.loss_terms['sum'](self.true_loss, self.fake_loss)
 			update_log_term(self.log_terms.get('sum'), reduce_tensor(loss_cos, self.world_size).clone().detach().item(), 1, self.master)
 			# get anomaly maps
 			# anomaly_map, _ = self.evaluator.cal_anomaly_map(self.feats_t, self.feats_s, [self.imgs.shape[2], self.imgs.shape[3]], uni_am=False, amap_mode='add', gaussian_sigma=4)
 			anomaly_map = self.preds
 			anomaly_score = self.scores
 			self.imgs_mask[self.imgs_mask > 0.5], self.imgs_mask[self.imgs_mask <= 0.5] = 1, 0
+			if self.cfg.vis:
+				if self.cfg.vis_dir is not None:
+					root_out = self.cfg.vis_dir
+				else:
+					root_out = self.writer.logdir
+				vis_rgb_gt_amp(self.img_path, self.imgs, self.imgs_mask.cpu().numpy().astype(int), anomaly_map, self.cfg.model.name, root_out, self.cfg.data.root.split('/')[1])
 			imgs_masks.append(self.imgs_mask.cpu().numpy().astype(int))
 			anomaly_maps.append(anomaly_map)
 			anomaly_scores.append(anomaly_score)

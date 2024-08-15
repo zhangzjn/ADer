@@ -24,6 +24,8 @@ class cfg_common(Namespace):
 		self.use_adeval = True
 		self.evaluator = Namespace()
 		self.evaluator.kwargs = dict(metrics=self.metrics, pooling_ks=[16, 16], max_step_aupro=100, mp=False, use_adeval=self.use_adeval)
+		self.vis = False
+		self.vis_dir = None
 
 		# ==> optim
 		self.optim = Namespace()

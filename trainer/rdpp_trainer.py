@@ -32,6 +32,7 @@ from timm.utils import dispatch_clip_grad
 from ._base_trainer import BaseTrainer
 from . import TRAINER
 from model.rdpp import Revisit_RDLoss
+from util.vis import vis_rgb_gt_amp
 
 @TRAINER.register_module
 class RDPTrainer(BaseTrainer):
@@ -53,6 +54,7 @@ class RDPTrainer(BaseTrainer):
 		self.img_noise = inputs['img_noise'].cuda()
 		self.cls_name = inputs['cls_name']
 		self.anomaly = inputs['anomaly']
+		self.img_path = inputs['img_path']
 		self.bs = self.imgs.shape[0]
 
 	def forward(self):
@@ -106,6 +108,12 @@ class RDPTrainer(BaseTrainer):
 			# get anomaly maps
 			anomaly_map, _ = self.evaluator.cal_anomaly_map(self.feats_t, self.feats_s, [self.imgs.shape[2], self.imgs.shape[3]], uni_am=False, amap_mode='add', gaussian_sigma=4)
 			self.imgs_mask[self.imgs_mask > 0.5], self.imgs_mask[self.imgs_mask <= 0.5] = 1, 0
+			if self.cfg.vis:
+				if self.cfg.vis_dir is not None:
+					root_out = self.cfg.vis_dir
+				else:
+					root_out = self.writer.logdir
+				vis_rgb_gt_amp(self.img_path, self.imgs, self.imgs_mask.cpu().numpy().astype(int), anomaly_map, self.cfg.model.name, root_out, self.cfg.data.root.split('/')[1])
 			imgs_masks.append(self.imgs_mask.cpu().numpy().astype(int))
 			anomaly_maps.append(anomaly_map)
 			cls_names.append(np.array(self.cls_name))
