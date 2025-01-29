@@ -15,9 +15,9 @@
 [//]: # (</p>)
 
 ## 🐉 News
+- 🔥 Plain ViT based <span style="color:red">**ViTAD**</span> is accepted by CVIU'25 🐲 [**Paper**](https://arxiv.org/abs/2312.07495) | [**Project**](https://zhangzjn.github.io/projects/ViTAD) | [**Code**](https://github.com/zhangzjn/ader/configs/vitad)
 - 🔥 We have released several reproduced models, configuration files, and training logs in our <span style="color:red">**benchmark**</span> paper 🐲 [**Paper**](https://arxiv.org/abs/2406.03262) | [**Results & CFGs**](configs/benchmark/README.md)
 - 🔥 <span style="color:red">**COCO-AD**</span> and powerful <span style="color:red">**InvAD**</span> is released 🐲 [**Paper**](https://arxiv.org/abs/2404.10760) | [**Project**](https://zhangzjn.github.io/projects/InvAD) | [**Code**](https://github.com/zhangzjn/ader/configs/invad)
-- 🔥 Plain ViT based <span style="color:red">**ViTAD**</span> is released 🐲 [**Paper**](https://arxiv.org/abs/2312.07495) | [**Project**](https://zhangzjn.github.io/projects/ViTAD) | [**Code**](https://github.com/zhangzjn/ader/configs/vitad)
 - 🔥 <span style="color:red">**Real-IAD**</span> is released: a new large-scale challenging industrial AD dataset 🐲 [**Paper**](https://arxiv.org/abs/2403.12580) | [**Project**](https://realiad4ad.github.io/Real-IAD) | [**Code**](https://github.com/TencentYoutuResearch/AnomalyDetection_Real-IAD) 
 
 ## 💡 Property
@@ -146,8 +146,8 @@ If you use this toolbox or benchmark in your research, please cite our related w
 @article{vitad,
   title={Exploring Plain ViT Reconstruction for Multi-class Unsupervised Anomaly Detection},
   author={Zhang, Jiangning and Chen, Xuhai and Wang, Yabiao and Wang, Chengjie and Liu, Yong and Li, Xiangtai and Yang, Ming-Hsuan and Tao, Dacheng},
-  journal={arXiv preprint arXiv:2312.07495},
-  year={2023}
+  journal={CVIU},
+  year={2025}
 }
 
 @article{invad,
